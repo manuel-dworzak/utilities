@@ -10,7 +10,7 @@ from setuptools import find_packages, setup, Command
 
 NAME = 'tl-utilities'
 DESCRIPTION = 'Utility classes/methods used in VRM cloudless system'
-URL = 'https://github.com/thanhledev/vrmjobs'
+URL = 'https://github.com/thanhledev/utilities'
 EMAIL = 'thanhledev@gmail.com'
 AUTHOR = 'Thanh Le'
 REQUIRES_PYTHON = '>=3.6.0'
