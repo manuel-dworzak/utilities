@@ -17,7 +17,7 @@ REQUIRES_PYTHON = '>=3.6.0'
 VERSION = '1.0.0'
 
 # What packages are required for this module to be executed?
-REQUIRED = ['tl-vrmjobs', 'tinydb']
+REQUIRED = ['tl-vrmjobs>=2.0.0', 'tinydb']
 
 # What packages are optional?
 EXTRAS = {}
