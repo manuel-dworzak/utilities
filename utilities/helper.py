@@ -1,5 +1,6 @@
 import re
 
+
 def volume_convert_yaml_to_json(yaml_conf, version: str):
     """
     Convert yaml configuration to json used to create docker volume.
@@ -9,11 +10,10 @@ def volume_convert_yaml_to_json(yaml_conf, version: str):
     """
     volume_conf_list = []
     # handle version 2
-    if re.match('^2\.(\d*)$', version):
-        print("Convert volume yaml of version 2.x")
+    #if re.match('^2\.(\d*)$', version):
+    #    print("Convert volume yaml of version 2.x")
     # handle version 3
     if re.match('^3\.(\d*)$', version):
-        print("Convert volume yaml of version 3.x")
         for tup in yaml_conf.items():
             volume_conf = {'name': tup[0], 'driver_opts': {}, 'labels': {}}
             if not tup[1]:
@@ -51,6 +51,7 @@ def volume_convert_yaml_to_json(yaml_conf, version: str):
 
     return {}
 
+
 def network_convert_yaml_to_json(yaml_conf, version: str):
     """
     Convert yaml configuration to json used to create docker network.
@@ -61,12 +62,11 @@ def network_convert_yaml_to_json(yaml_conf, version: str):
     network_conf_list = []
 
     # handle version 2
-    if re.match('^2\.(\d*)$', version):
-        print("Convert network yaml of version 2.x")
+    #if re.match('^2\.(\d*)$', version):
+    #    print("Convert network yaml of version 2.x")
 
     # handle version 3
     if re.match('^3\.(\d*)$', version):
-        print("Convert network yaml of version 3.x")
         for tup in yaml_conf.items():
             network_conf = {'name': tup[0], 'driver': None, 'options': None,
                             'ipam': None, 'check_duplicate': None, 'internal': False,
@@ -139,6 +139,7 @@ def network_convert_yaml_to_json(yaml_conf, version: str):
         return network_conf_list
 
     return {}
+
 
 def container_convert_yaml_to_json(yaml_conf, version: str):
     """
