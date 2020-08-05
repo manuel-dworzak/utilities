@@ -156,7 +156,7 @@ def container_convert_yaml_to_json(yaml_conf, version: str):
 
     # handle version 3
     if re.match('^3\.(\d*)$', version):
-        print("Convert container yaml of version 3.x")
+        # print("Convert container yaml of version 3.x")
         for tup in yaml_conf.items():
             container_conf = {
                 'container_name': None,
