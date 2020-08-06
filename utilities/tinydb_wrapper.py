@@ -59,6 +59,25 @@ class TinyDbWrapper(metaclass=SingletonMeta):
                     return True
             return False
 
+    def get_all_hostnames_by_type(self, host_type: 'vrmjobs.HostType') -> []:
+        """
+        Get all hostnames of a certain type
+        :param host_type: type of host we want to filter
+        :return: list of hostnames
+        """
+        hostnames = []
+        with self.lock:
+            try:
+                hosts = self.table.all()
+
+                if hosts:
+                    for h in hosts:
+                        if vrmjobs.HostType.__dict__[h['type']] == host_type:
+                            hostnames.append(h['hostname'])
+                return hostnames
+            except Exception as err:
+                raise GetError('Cannot find hostnames with type={}'.format(str(host_type)), err)
+
     def get_host_by_hostname(self, hostname: str) -> vrmjobs.HostInfo:
         """
         Get info of a host by its hostname
@@ -158,7 +177,7 @@ class TinyDbWrapper(metaclass=SingletonMeta):
                     latest_update = datetime.strptime(record['latest_recv'], self.time_format)
                     difference = current_time - latest_update
 
-                    return difference.total_seconds() <= max_interval
+                    return int(difference.total_seconds()) <= max_interval
 
             except Exception as err:
                 raise HeartbeatError('Cannot check heartbeat of host with hostname={}'.format(hostname), err)
