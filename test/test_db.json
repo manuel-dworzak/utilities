@@ -1,4 +1,93 @@
 {
+  "host_query_info": {
+    "1": {
+      "filters": [
+        {
+          "category": "disk",
+          "criteria": [
+            {
+              "field_name": "mounpoint",
+              "field_value": "/rootfs",
+              "regex": "="
+            },
+            {
+              "field_name": "device",
+              "field_value": "^.*/dev/sda.*$",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "network",
+          "criteria": [
+            {
+              "field_name": "interface",
+              "field_value": "enp0s8",
+              "regex": "="
+            }
+          ]
+        }
+      ],
+      "hostname": "worker1",
+      "job": "node"
+    },
+    "2": {
+      "filters": [
+        {
+          "category": "cpu",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "memory",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "disk",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "disk-io",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "network-io",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        }
+      ],
+      "hostname": "worker1",
+      "job": "cadvisor"
+    }
+  },
   "hosts": {
     "1": {
       "hostname": "worker1",

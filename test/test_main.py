@@ -1,7 +1,7 @@
 from utilities import *
 import vrmjobs
 from datetime import datetime
-
+from uuid import uuid4
 
 def test_routine_checking_heartbeat(db_manager: 'TinyDbWrapper', interval: int):
     try:
@@ -62,19 +62,18 @@ def main():
     # create db
     db = TinyDbWrapper('test_db.json')
 
-    # insert a new host (if possible)
-    #test_insert_hosts(db, 'worker1', '192.168.1.11', [vrmjobs.PortInfo('workerd', 10300),
-    #                            vrmjobs.PortInfo('builderd', 5000)], vrmjobs.HostType.WORKER)
+    # test host_query_info's functions
+    worker1_cadvisor_diskio_criteria = db.get_criteria_by_hostname_job_category('worker1',
+                                                                                'cadvisor',
+                                                                                'disk-io')
 
-    #test_insert_hosts(db, 'worker2', '192.168.1.12', [vrmjobs.PortInfo('workerd', 10300),
-    #                                                  vrmjobs.PortInfo('builderd', 5000)], vrmjobs.HostType.WORKER)
+    print(worker1_cadvisor_diskio_criteria)
 
-    #test_get_host(db, 'worker1')
-    #test_get_host(db, 'worker3')
-    #test_update_heartbeat(db, 'worker1')
-    #test_update_heartbeat(db, 'worker2')
-    #test_check_heartbeat(db, 'worker1', 3600)
-    test_routine_checking_heartbeat(db, 3600)
+    worker1_node_disk_criteria = db.get_criteria_by_hostname_job_category('worker1',
+                                                                          'node',
+                                                                          'disk')
+
+    print(worker1_node_disk_criteria)
 
 
 if __name__ == '__main__':
