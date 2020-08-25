@@ -213,8 +213,18 @@ class TinyDbWrapper(metaclass=SingletonMeta):
                     query = Query()
                     record = self.host_query_info.search(query.hostname == hostname and query.job == job)
                     old_filters = record[0]['filters']
-                    for item in info:
-                        old_filters.append({'category': item.category, 'criteria': item.criteria})
+                    for item_info in info:
+                        # if category of new FilterInfo (item_info) is already included in the database
+                        if item_info.category in [d['category'] for d in old_filters]:
+                            for item_filter in old_filters:
+                                # now we compare each criterion of item_info and item_filter
+                                if item_info.category == item_filter['category']:
+                                    for crit_info in item_info.criteria:
+                                        if crit_info['field_name'] not in [d['field_name'] for d in item_filter['criteria']]:
+                                            item_filter['criteria'].append(crit_info)
+                        # else, we add the whole new category and all of its criteria
+                        else:
+                            old_filters.append({'category': item_info.category, 'criteria': item_info.criteria})
 
                     self.host_query_info.update({'filters': old_filters},
                                                 query.hostname.matches(hostname) and query.job.matches(job))
@@ -239,7 +249,7 @@ class TinyDbWrapper(metaclass=SingletonMeta):
 
     def get_criteria_by_hostname_job_category(self, hostname: str, job: str, category: str) -> List[Dict[str, str]]:
         """
-        Get the list of filterinfo of a hostname using job and category values
+        Get the list of FilterInfo of a worker using hostname, job, and category values
         :param hostname: hostname of the worker
         :param job: name of a prometheus job of the worker
         :param category: cpu/memory/disk/disk_io/network_io
@@ -253,3 +263,21 @@ class TinyDbWrapper(metaclass=SingletonMeta):
                         if item['category'] == category:
                             return item['criteria']
             return None
+
+    def get_filter_category_by_hostname_job(self, hostname: str, job: str) -> List[str]:
+        """
+        Get the list of all category of FilterInfo of a worker using hostname and job values
+        :param hostname: hostname of the worker
+        :param job: name of a prometheus job of the worker
+        :return: List of names of FilterInfo's categories
+        """
+        with self.lock:
+            categories = []
+            host_query_infos = self.host_query_info.all()
+            for host in host_query_infos:
+                if host['hostname'] == hostname and host['job'] == job:
+                    for item in host['filters']:
+                        categories.append(item['category'])
+
+            return categories
+

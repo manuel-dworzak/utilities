@@ -6,30 +6,35 @@
           "category": "disk",
           "criteria": [
             {
-              "field_name": "mounpoint",
-              "field_value": "/rootfs",
+              "field_name": "mountpoint",
+              "field_value": "/",
               "regex": "="
-            },
+            }
+          ]
+        },
+        {
+          "category": "disk_io",
+          "criteria": [
             {
               "field_name": "device",
-              "field_value": "^.*/dev/sda.*$",
+              "field_value": "^.*sda.*$",
               "regex": "=~"
             }
           ]
         },
         {
-          "category": "network",
+          "category": "network_io",
           "criteria": [
             {
-              "field_name": "interface",
-              "field_value": "enp0s8",
-              "regex": "="
+              "field_name": "device",
+              "field_value": "^wlp.*$",
+              "regex": "=~"
             }
           ]
         }
       ],
       "hostname": "worker1",
-      "job": "node"
+      "job": "nodeexporter"
     },
     "2": {
       "filters": [
@@ -60,25 +65,40 @@
               "field_name": "id",
               "field_value": "/docker/.+",
               "regex": "=~"
-            }
-          ]
-        },
-        {
-          "category": "disk-io",
-          "criteria": [
+            },
             {
-              "field_name": "id",
-              "field_value": "/docker/.+",
+              "field_name": "device",
+              "field_value": "^.*sda.*$",
               "regex": "=~"
             }
           ]
         },
         {
-          "category": "network-io",
+          "category": "disk_io",
           "criteria": [
             {
               "field_name": "id",
               "field_value": "/docker/.+",
+              "regex": "=~"
+            },
+            {
+              "field_name": "device",
+              "field_value": "^.*sda.*$",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "network_io",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            },
+            {
+              "field_name": "interface",
+              "field_value": "^.*eth.*$",
               "regex": "=~"
             }
           ]
