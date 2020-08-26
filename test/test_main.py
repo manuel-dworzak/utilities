@@ -61,6 +61,7 @@ def test_insert_hosts(db_manager: 'TinyDbWrapper', hostname: str, inet_addr: str
 
 
 def test_insert_queryinfo(db_manager: 'TinyDbWrapper'):
+    node_cpu_filter_info = FilterInfo('cpu', [{'field_name': 'mode', 'field_value': 'idle', 'regex': '='}])
     node_disk_filter_info = FilterInfo('disk', [{'field_name': 'mountpoint', 'field_value': '/', 'regex': '='}])
     node_disk_io_filter_info = FilterInfo('disk_io',
                                           [{'field_name': 'device', 'field_value': '^.*sda.*$', 'regex': '=~'}])
@@ -74,70 +75,27 @@ def test_insert_queryinfo(db_manager: 'TinyDbWrapper'):
     cadvisor_network_io_filter_info = FilterInfo('network_io',
                                                  [{'field_name': 'id', 'field_value': '/docker/.+', 'regex': '=~'}])
 
-    worker1_nodeexporter_query_ack = QueryAck(str(uuid4()),
-                                              'worker1', 'nodeexporter',
-                                              [node_disk_filter_info, node_disk_io_filter_info, node_net_filter_info],
-                                              VrmType.QUERY_ACK)
+    # insert FilterInfo to db
+    db_manager.insert_queryinfo('simulation', 'nodeexporter',
+                                [node_cpu_filter_info, node_disk_filter_info,
+                                 node_disk_io_filter_info, node_net_filter_info])
 
-    print('worker1_nodeexporter_query_ack: {} - length {}'.format(jsonpickle.encode(
-        worker1_nodeexporter_query_ack),
-        str(len(jsonpickle.encode(
-            worker1_nodeexporter_query_ack)))))
+    node_mem_filter_info = FilterInfo('memory', [{'field_name': 'mode', 'field_value': 'swap', 'regex': '=~'}])
+    node_newcpu_filter_info = FilterInfo('cpu', [{'field_name': 'mode', 'field_value': '^.*sys.*$', 'regex': '!~'}])
 
-    worker1_cadvisor_query_ack = QueryAck(str(uuid4()),
-                                          'worker1', 'cadvisor',
-                                          [cadvisor_cpu_filter_info, cadvisor_mem_filter_info,
-                                           cadvisor_disk_filter_info, cadvisor_disk_io_filter_info,
-                                           cadvisor_network_io_filter_info],
-                                          VrmType.QUERY_ACK)
+    db_manager.insert_queryinfo('simulation', 'nodeexporter',
+                                [node_newcpu_filter_info, node_mem_filter_info])
 
-    print('worker1_cadvisor_query_ack: {} - length {} bytes'.format(jsonpickle.encode(
-        worker1_cadvisor_query_ack),
-        str(len(jsonpickle.encode(
-            worker1_cadvisor_query_ack)))))
-
-    # insert info from QueryAck packet to db
-    result = db_manager.insert_queryinfo(worker1_nodeexporter_query_ack.hostname,
-                                         worker1_nodeexporter_query_ack.job,
-                                         worker1_nodeexporter_query_ack.filters)
-    print("Insert worker1_nodeexporter_query_ack successfully") if result \
-        else print("Insert worker1_nodeexporter_query_ack failed")
-
-    result = db_manager.insert_queryinfo(worker1_cadvisor_query_ack.hostname,
-                                         worker1_cadvisor_query_ack.job,
-                                         worker1_cadvisor_query_ack.filters)
-
-    print("Insert worker1_cadvisor_query_ack successfully") if result \
-        else print("Insert worker1_cadvisor_query_ack failed")
+    db_manager.insert_queryinfo('simulation', 'cadvisor',
+                                [cadvisor_cpu_filter_info, cadvisor_mem_filter_info,
+                                 cadvisor_disk_filter_info, cadvisor_disk_io_filter_info,
+                                 cadvisor_network_io_filter_info])
 
 
 def main():
     # create db
     db = TinyDbWrapper('test_db.json')
-    cadvisor_disk_filter_info = FilterInfo('disk', [{'field_name': 'device', 'field_value': '^.*sda.*$', 'regex': '=~'}])
-    cadvisor_disk_io_filter_info = FilterInfo('disk_io',
-                                              [{'field_name': 'device', 'field_value': '^.*sda.*$', 'regex': '=~'}])
-    cadvisor_network_io_filter_info = FilterInfo('network_io',
-                                                 [{'field_name': 'interface', 'field_value': '^.*eth.*$', 'regex': '=~'}])
-
-    # add some extra criteria
-    worker1_cadvisor_new_queryack = QueryAck(str(uuid4()),
-                                             'worker1', 'cadvisor',
-                                             [cadvisor_disk_filter_info, cadvisor_disk_io_filter_info,
-                                              cadvisor_network_io_filter_info],
-                                             VrmType.QUERY_ACK)
-    data = jsonpickle.encode(worker1_cadvisor_new_queryack)
-    print('worker1_cadvisor_new_queryack: {} - length: {} bytes'.format(data, str(len(data))))
-    result = db.insert_queryinfo(worker1_cadvisor_new_queryack.hostname,
-                                 worker1_cadvisor_new_queryack.job,
-                                 worker1_cadvisor_new_queryack.filters)
-
-    # get worker1 filter category
-    worker1_filter_categories = db.get_filter_category_by_hostname_job('worker1', 'cadvisor')
-    for category in worker1_filter_categories:
-        worker1_criteria = db.get_criteria_by_hostname_job_category('worker1', 'cadvisor', category)
-
-        print('Cate: {} -> {}'.format(category, worker1_criteria))
+    test_insert_queryinfo(db)
 
 
 if __name__ == '__main__':

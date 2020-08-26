@@ -18,7 +18,7 @@ class TinyDbWrapper(metaclass=SingletonMeta):
         # create hosts table
         self.hosts = self.db.table('hosts')
         # create query table
-        self.host_query_info = self.db.table('host_query_info')
+        self.query_info = self.db.table('query_info')
         # create lock
         self.lock = RLock()
         # create timing-format
@@ -185,98 +185,100 @@ class TinyDbWrapper(metaclass=SingletonMeta):
             except Exception as err:
                 raise HeartbeatError('Cannot check heartbeat of host with hostname={}'.format(hostname), err)
 
-    def insert_queryinfo(self, hostname: str, job: str, info: List['vrmjobs.FilterInfo']) -> bool:
+    def insert_queryinfo(self, sys_type: str, job: str, info: List['vrmjobs.FilterInfo']) -> bool:
         """
-        Insert a new query info of a worker into db
-        :param hostname: hostname of the worker
+        Insert a FilterInfo to db
+        :param sys_type: type of the system (simulation/production)
         :param job: name of a prometheus job
         :param info: a list of instance of FilterInfo
         :return: True if success, False otherwise
         """
         with self.lock:
             try:
-                host_query_info = self._check_queryinfo_existence(hostname, job)
+                type_query_info = self._check_info_existence(sys_type, job)
 
-                # if host_query_info is not existed
-                if not host_query_info:
+                # if type_query_info is not existed
+                if not type_query_info:
                     filters = []
                     for item in info:
                         filters.append({'category': item.category, 'criteria': item.criteria})
 
-                    self.host_query_info.insert({'hostname': hostname,
-                                                 'job': job,
-                                                 'filters': filters})
-
+                    self.query_info.insert({'type': sys_type,
+                                            'job': job,
+                                            'filters': filters})
                     return True
                 # in case host_query_info, we add/update the category if needed
                 else:
                     query = Query()
-                    record = self.host_query_info.search(query.hostname == hostname and query.job == job)
+                    record = self.query_info.search(query.type == sys_type and query.job == job)
                     old_filters = record[0]['filters']
                     for item_info in info:
                         # if category of new FilterInfo (item_info) is already included in the database
                         if item_info.category in [d['category'] for d in old_filters]:
                             for item_filter in old_filters:
-                                # now we compare each criterion of item_info and item_filter
                                 if item_info.category == item_filter['category']:
+                                    # now we compare each criterion of item_info and item_filter
                                     for crit_info in item_info.criteria:
-                                        if crit_info['field_name'] not in [d['field_name'] for d in item_filter['criteria']]:
-                                            item_filter['criteria'].append(crit_info)
+                                        # add without comparing field_name
+                                        item_filter['criteria'].append(crit_info)
+                                        # add with comparing field_name (unique check)
+                                        # if crit_info['field_name'] not in [d['field_name'] for d in item_filter['criteria']]:
+                                        #    item_filter['criteria'].append(crit_info)
                         # else, we add the whole new category and all of its criteria
                         else:
                             old_filters.append({'category': item_info.category, 'criteria': item_info.criteria})
 
-                    self.host_query_info.update({'filters': old_filters},
-                                                query.hostname.matches(hostname) and query.job.matches(job))
+                    self.query_info.update({'filters': old_filters},
+                                           query.type.matches(sys_type) and query.job.matches(job))
                     return True
 
             except Exception as err:
-                raise InsertError('Cannot insert new query_info {}'.format(str(info)), err)
+                raise InsertError('Cannot insert FilterInfo of {}-{} to db'.format(sys_type, job), err)
 
-    def _check_queryinfo_existence(self, hostname: str, job: str) -> bool:
+    def _check_info_existence(self, sys_type: str, job: str) -> bool:
         """
-        Check whether a queryinfo with certain hostname & job is already included in the host_query_info table
-        :param hostname: hostname of the worker
-        :param job: name of a prometheus job of the worker
+        Check whether FilterInfo with certain type & job is already included in the query_info table
+        :param sys_type: type of system (simulation/production)
+        :param job: name of a prometheus job
         :return: True if included, False otherwise
         """
         with self.lock:
-            hosts = self.host_query_info.all()
-            for host in hosts:
-                if host['hostname'] == hostname and host['job'] == job:
+            infos = self.query_info.all()
+            for info in infos:
+                if info['type'] == sys_type and info['job'] == job:
                     return True
             return False
 
-    def get_criteria_by_hostname_job_category(self, hostname: str, job: str, category: str) -> List[Dict[str, str]]:
+    def get_criteria_by_type_job_category(self, sys_type: str, job: str, category: str) -> List[Dict[str, str]]:
         """
         Get the list of FilterInfo of a worker using hostname, job, and category values
-        :param hostname: hostname of the worker
-        :param job: name of a prometheus job of the worker
+        :param sys_type: type of system (simulation/production)
+        :param job: name of a prometheus job
         :param category: cpu/memory/disk/disk_io/network_io
         :return: List of vrmjobs.FilterInfo's criteria
         """
         with self.lock:
-            host_query_infos = self.host_query_info.all()
-            for host in host_query_infos:
-                if host['hostname'] == hostname and host['job'] == job:
-                    for item in host['filters']:
+            query_infos = self.query_info.all()
+            for info in query_infos:
+                if info['type'] == sys_type and info['job'] == job:
+                    for item in info['filters']:
                         if item['category'] == category:
                             return item['criteria']
-            return None
+            return []
 
-    def get_filter_category_by_hostname_job(self, hostname: str, job: str) -> List[str]:
+    def get_categories_by_type_job(self, sys_type: str, job: str) -> List[str]:
         """
         Get the list of all category of FilterInfo of a worker using hostname and job values
-        :param hostname: hostname of the worker
+        :param sys_type: type of system (simulation/production)
         :param job: name of a prometheus job of the worker
         :return: List of names of FilterInfo's categories
         """
         with self.lock:
             categories = []
-            host_query_infos = self.host_query_info.all()
-            for host in host_query_infos:
-                if host['hostname'] == hostname and host['job'] == job:
-                    for item in host['filters']:
+            query_infos = self.query_info.all()
+            for info in query_infos:
+                if info['type'] == sys_type and info['job'] == job:
+                    for item in info['filters']:
                         categories.append(item['category'])
 
             return categories

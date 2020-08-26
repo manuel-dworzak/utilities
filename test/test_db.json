@@ -1,113 +1,4 @@
 {
-  "host_query_info": {
-    "1": {
-      "filters": [
-        {
-          "category": "disk",
-          "criteria": [
-            {
-              "field_name": "mountpoint",
-              "field_value": "/",
-              "regex": "="
-            }
-          ]
-        },
-        {
-          "category": "disk_io",
-          "criteria": [
-            {
-              "field_name": "device",
-              "field_value": "^.*sda.*$",
-              "regex": "=~"
-            }
-          ]
-        },
-        {
-          "category": "network_io",
-          "criteria": [
-            {
-              "field_name": "device",
-              "field_value": "^wlp.*$",
-              "regex": "=~"
-            }
-          ]
-        }
-      ],
-      "hostname": "worker1",
-      "job": "nodeexporter"
-    },
-    "2": {
-      "filters": [
-        {
-          "category": "cpu",
-          "criteria": [
-            {
-              "field_name": "id",
-              "field_value": "/docker/.+",
-              "regex": "=~"
-            }
-          ]
-        },
-        {
-          "category": "memory",
-          "criteria": [
-            {
-              "field_name": "id",
-              "field_value": "/docker/.+",
-              "regex": "=~"
-            }
-          ]
-        },
-        {
-          "category": "disk",
-          "criteria": [
-            {
-              "field_name": "id",
-              "field_value": "/docker/.+",
-              "regex": "=~"
-            },
-            {
-              "field_name": "device",
-              "field_value": "^.*sda.*$",
-              "regex": "=~"
-            }
-          ]
-        },
-        {
-          "category": "disk_io",
-          "criteria": [
-            {
-              "field_name": "id",
-              "field_value": "/docker/.+",
-              "regex": "=~"
-            },
-            {
-              "field_name": "device",
-              "field_value": "^.*sda.*$",
-              "regex": "=~"
-            }
-          ]
-        },
-        {
-          "category": "network_io",
-          "criteria": [
-            {
-              "field_name": "id",
-              "field_value": "/docker/.+",
-              "regex": "=~"
-            },
-            {
-              "field_name": "interface",
-              "field_value": "^.*eth.*$",
-              "regex": "=~"
-            }
-          ]
-        }
-      ],
-      "hostname": "worker1",
-      "job": "cadvisor"
-    }
-  },
   "hosts": {
     "1": {
       "hostname": "worker1",
@@ -172,6 +63,125 @@
         }
       ],
       "type": "WORKER"
+    }
+  },
+  "query_info": {
+    "1": {
+      "filters": [
+        {
+          "category": "cpu",
+          "criteria": [
+            {
+              "field_name": "mode",
+              "field_value": "idle",
+              "regex": "="
+            },
+            {
+              "field_name": "mode",
+              "field_value": "^.*sys.*$",
+              "regex": "!~"
+            }
+          ]
+        },
+        {
+          "category": "disk",
+          "criteria": [
+            {
+              "field_name": "mountpoint",
+              "field_value": "/",
+              "regex": "="
+            }
+          ]
+        },
+        {
+          "category": "disk_io",
+          "criteria": [
+            {
+              "field_name": "device",
+              "field_value": "^.*sda.*$",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "network_io",
+          "criteria": [
+            {
+              "field_name": "device",
+              "field_value": "^wlp.*$",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "memory",
+          "criteria": [
+            {
+              "field_name": "mode",
+              "field_value": "swap",
+              "regex": "=~"
+            }
+          ]
+        }
+      ],
+      "job": "nodeexporter",
+      "type": "simulation"
+    },
+    "2": {
+      "filters": [
+        {
+          "category": "cpu",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "memory",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "disk",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "disk_io",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        },
+        {
+          "category": "network_io",
+          "criteria": [
+            {
+              "field_name": "id",
+              "field_value": "/docker/.+",
+              "regex": "=~"
+            }
+          ]
+        }
+      ],
+      "job": "cadvisor",
+      "type": "simulation"
     }
   }
 }
