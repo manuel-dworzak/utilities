@@ -219,11 +219,13 @@ class TinyDbWrapper(metaclass=SingletonMeta):
                                 if item_info.category == item_filter['category']:
                                     # now we compare each criterion of item_info and item_filter
                                     for crit_info in item_info.criteria:
-                                        # add without comparing field_name
-                                        item_filter['criteria'].append(crit_info)
                                         # add with comparing field_name (unique check)
-                                        # if crit_info['field_name'] not in [d['field_name'] for d in item_filter['criteria']]:
-                                        #    item_filter['criteria'].append(crit_info)
+                                        if crit_info['field_name'] not in [d['field_name'] for d in item_filter['criteria']]:
+                                            item_filter['criteria'].append(crit_info)
+                                        else:
+                                            if crit_info['field_value'] not in [d['field_value'] for d in item_filter['criteria']]:
+                                                item_filter['criteria'].append(crit_info)
+
                         # else, we add the whole new category and all of its criteria
                         else:
                             old_filters.append({'category': item_info.category, 'criteria': item_info.criteria})
