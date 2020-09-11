@@ -1,6 +1,10 @@
+import os
+import pathlib
+
 from utilities import *
 from vrmjobs import *
 from datetime import datetime
+import yaml
 from uuid import uuid4
 import jsonpickle
 
@@ -94,8 +98,22 @@ def test_insert_queryinfo(db_manager: 'TinyDbWrapper'):
 
 def main():
     # create db
-    db = TinyDbWrapper('test_db.json')
-    test_insert_queryinfo(db)
+    #db = TinyDbWrapper('test_db.json')
+    #test_insert_queryinfo(db)
+    main_path = str(pathlib.Path(__file__).parent.absolute())
+    with open(os.path.join(main_path, 'config.yaml'), 'r') as f:
+        try:
+            cfg = yaml.safe_load(f)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    # debug
+    # print(cfg)
+
+    container_configs = container_convert_yaml_to_json(cfg['architectd']['metric_exporters']['production']['containers'],
+                                                       '3.8')
+
+    print(container_configs)
 
 
 if __name__ == '__main__':

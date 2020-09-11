@@ -1,0 +1,280 @@
+system:
+  main_interface: 'enp0s8' # simulation = worker<XXX>-eth0 => ignore this value; production = enp0s8 or wlp4s0/wlp2s0
+  # type of collectord / simulation = containernet ; production = hardware device
+  type: production
+
+collectord:
+  metric_collectors:
+    version: "3.8"
+    networks:
+      monitor_net:
+    volumes:
+      prom_data:
+    config_path: "config/prometheus/prometheus.yaml"
+    containers:
+      prometheus:
+        container_name: prometheus
+        image: unibaktr/prometheus:2.2.1
+        ports:
+          - "9090:9090"
+        volumes:
+          - config/prometheus:/etc/prometheus:ro
+          - prom_data:/prometheus:rw
+        command:
+          - "--config.file=/etc/prometheus/prometheus.yaml"
+          - "--storage.tsdb.path=/prometheus"
+          - "--storage.tsdb.retention=2h"
+        networks:
+          - monitor_net:
+  local_exporters:
+    simulation:
+      version: "3.8"
+      networks:
+        monitor_net:
+      containers:
+        nodeexporter:
+          container_name: nodeexporter
+          image: unibaktr/nodeexporter:0.18.1
+          network_mode: "host"
+          pid: "host"
+          volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+            - /etc/hostname:/etc/nodename:ro
+          command:
+            - "--path.rootfs=/rootfs"
+            - "--path.sysfs=/host/sys"
+            - "--path.procfs=/host/proc"
+            - "--collector.textfile.directory=/etc/node_exporter"
+            - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc|rootfs/var-lib-docker/containers|rootfs/var-lib-docker/overlay2|rootfs/run/docker/netns|rootfs/var-lib-docker/aufs)($$|/)"
+            - "--no-collector.arp"
+            - "--no-collector.bcache"
+            - "--no-collector.edac"
+            - "--no-collector.entropy"
+            - "--no-collector.filefd"
+            - "--no-collector.infiniband"
+            - "--no-collector.ipvs"
+            - "--no-collector.nfs"
+            - "--no-collector.sockstat"
+            - "--no-collector.timex"
+            - "--no-collector.uname"
+            - "--no-collector.vmstat"
+            - "--no-collector.xfs"
+            - "--no-collector.zfs"
+          entrypoint: "/etc/node_exporter/docker-entrypoint.sh"
+          restart: "always" # no, always, on-failure[:max-retries]
+          metric_port: 9100
+        cadvisor:
+          container_name: cadvisor
+          image: unibaktr/cadvisor:v0.36.0
+          ports:
+            - "8080:8080"
+          volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:rw
+            - /sys:/sys:ro
+            - /var-lib-docker/:/var/lib/docker:ro
+            - /dev/disk/:/dev/disk:ro
+          command:
+            - "-logtostderr"
+            - "-allow_dynamic_housekeeping=false"
+            - "-global_housekeeping_interval=30s"
+            - "-housekeeping_interval=5s"
+            - "-docker_only=true"
+            - "-storage_duration=30s"
+          entrypoint: "/usr/bin/cadvisor"
+          restart: "always" # no, always, on-failure[:max-retries]
+          networks:
+            - monitor_net:
+          metric_port: 8080
+    production:
+      version: "3.8"
+      networks:
+        monitor_net:
+      containers:
+        nodeexporter:
+          container_name: nodeexporter
+          image: unibaktr/nodeexporter:0.18.1
+          network_mode: "host"
+          pid: "host"
+          volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+            - /etc/hostname:/etc/nodename:ro
+          command:
+            - "--path.rootfs=/rootfs"
+            - "--path.sysfs=/host/sys"
+            - "--path.procfs=/host/proc"
+            - "--collector.textfile.directory=/etc/node_exporter"
+            - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+            - "--no-collector.arp"
+            - "--no-collector.bcache"
+            - "--no-collector.edac"
+            - "--no-collector.entropy"
+            - "--no-collector.filefd"
+            - "--no-collector.infiniband"
+            - "--no-collector.ipvs"
+            - "--no-collector.nfs"
+            - "--no-collector.sockstat"
+            - "--no-collector.timex"
+            - "--no-collector.uname"
+            - "--no-collector.vmstat"
+            - "--no-collector.xfs"
+            - "--no-collector.zfs"
+          entrypoint: "/etc/node_exporter/docker-entrypoint.sh"
+          restart: "always" # no, always, on-failure[:max-retries]
+          metric_port: 9100
+        cadvisor:
+          container_name: cadvisor
+          image: unibaktr/cadvisor:v0.36.0
+          ports:
+            - "8080:8080"
+          volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:rw
+            - /sys:/sys:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+            - /dev/disk/:/dev/disk:ro
+          command:
+            - "-logtostderr"
+            - "-allow_dynamic_housekeeping=false"
+            - "-global_housekeeping_interval=30s"
+            - "-housekeeping_interval=5s"
+            - "-docker_only=true"
+            - "-storage_duration=30s"
+          entrypoint: "/usr/bin/cadvisor"
+          restart: "always" # no, always, on-failure[:max-retries]
+          networks:
+            - monitor_net:
+          metric_port: 8080
+
+
+coordinatord:
+  listen_port: 10100 # port for listening socket
+  send_port: 10110 # port for sending socket
+  broadcast_port: 10120 # port in coordinatord used for broadcasting UDP packets to monitor/worker hosts
+  worker_dest_port: 10300 # listening port of workerd running in worker host
+  monitor_dest_port: 10400 # listening port of monitord running in monitor host
+  broadcast_interval: 10 # in seconds
+
+architectd:
+  number_of_architect: 4
+  initialize_worker_api: "/initialize"
+  metric_exporters:
+    simulation:
+      version: "3.8"
+      containers:
+        nodeexporter:
+          container_name: nodeexporter
+          image: unibaktr/nodeexporter:0.18.1
+          network_mode: "host"
+          pid: "host"
+          volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+            - /etc/hostname:/etc/nodename:ro
+          command:
+            - "--path.rootfs=/rootfs"
+            - "--path.sysfs=/host/sys"
+            - "--path.procfs=/host/proc"
+            - "--collector.textfile.directory=/etc/node_exporter"
+            - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc|rootfs/var-lib-docker/containers|rootfs/var-lib-docker/overlay2|rootfs/run/docker/netns|rootfs/var-lib-docker/aufs)($$|/)"
+            - "--no-collector.arp"
+            - "--no-collector.bcache"
+            - "--no-collector.edac"
+            - "--no-collector.entropy"
+            - "--no-collector.filefd"
+            - "--no-collector.infiniband"
+            - "--no-collector.ipvs"
+            - "--no-collector.nfs"
+            - "--no-collector.sockstat"
+            - "--no-collector.timex"
+            - "--no-collector.uname"
+            - "--no-collector.vmstat"
+            - "--no-collector.xfs"
+            - "--no-collector.zfs"
+          entrypoint: "/etc/node_exporter/docker-entrypoint.sh"
+          restart: "always" # no, always, on-failure[:max-retries]
+          metric_port: 9100
+        cadvisor:
+          container_name: cadvisor
+          image: unibaktr/cadvisor:v0.36.0
+          ports:
+            - "8080:8080"
+          volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:rw
+            - /sys:/sys:ro
+            - /var-lib-docker/:/var/lib/docker:ro
+            - /dev/disk/:/dev/disk:ro
+          command:
+            - "-logtostderr"
+            - "-allow_dynamic_housekeeping=false"
+            - "-global_housekeeping_interval=30s"
+            - "-housekeeping_interval=5s"
+            - "-docker_only=true"
+            - "-storage_duration=30s"
+          entrypoint: "/usr/bin/cadvisor"
+          restart: "always" # no, always, on-failure[:max-retries]
+          metric_port: 8080
+    production:
+      version: "3.8"
+      containers:
+        nodeexporter:
+          container_name: nodeexporter
+          image: unibaktr/nodeexporter:0.18.1
+          network_mode: "host"
+          pid: "host"
+          volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+            - /etc/hostname:/etc/nodename:ro
+          command:
+            - "--path.rootfs=/rootfs"
+            - "--path.sysfs=/host/sys"
+            - "--path.procfs=/host/proc"
+            - "--collector.textfile.directory=/etc/node_exporter"
+            - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+            - "--no-collector.arp"
+            - "--no-collector.bcache"
+            - "--no-collector.edac"
+            - "--no-collector.entropy"
+            - "--no-collector.filefd"
+            - "--no-collector.infiniband"
+            - "--no-collector.ipvs"
+            - "--no-collector.nfs"
+            - "--no-collector.sockstat"
+            - "--no-collector.timex"
+            - "--no-collector.uname"
+            - "--no-collector.vmstat"
+            - "--no-collector.xfs"
+            - "--no-collector.zfs"
+          entrypoint: "/etc/node_exporter/docker-entrypoint.sh"
+          restart: "always" # no, always, on-failure[:max-retries]
+          metric_port: 9100
+        cadvisor:
+          container_name: cadvisor
+          image: unibaktr/cadvisor:v0.36.0
+          ports:
+            - "8080:8080"
+          volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:rw
+            - /sys:/sys:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+            - /dev/disk/:/dev/disk:ro
+          command:
+            - "-logtostderr"
+            - "-allow_dynamic_housekeeping=false"
+            - "-global_housekeeping_interval=10s"
+            - "-housekeeping_interval=15s"
+            - "-docker_only=true"
+            - "-storage_duration=2m"
+          entrypoint: "/usr/bin/cadvisor"
+          privileged: True
+          restart: "always" # no, always, on-failure[:max-retries]
+          metric_port: 8080
