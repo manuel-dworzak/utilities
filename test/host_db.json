@@ -1,0 +1,68 @@
+{
+  "hosts": {
+    "1": {
+      "hostname": "worker1",
+      "inet_addr": "192.168.1.11",
+      "latest_recv": "21:24:45 04-08-2020",
+      "ports": [
+        {
+          "daemon": "workerd",
+          "port": 10300
+        },
+        {
+          "daemon": "builderd",
+          "port": 5000
+        }
+      ],
+      "type": "WORKER"
+    },
+    "2": {
+      "hostname": "worker2",
+      "inet_addr": "192.168.1.12",
+      "latest_recv": "21:24:45 04-08-2020",
+      "ports": [
+        {
+          "daemon": "workerd",
+          "port": 10300
+        },
+        {
+          "daemon": "builderd",
+          "port": 5000
+        }
+      ],
+      "type": "WORKER"
+    },
+    "3": {
+      "hostname": "worker3",
+      "inet_addr": "192.168.1.13",
+      "latest_recv": "23:24:45 04-08-2020",
+      "ports": [
+        {
+          "daemon": "workerd",
+          "port": 10300
+        },
+        {
+          "daemon": "builderd",
+          "port": 5000
+        }
+      ],
+      "type": "WORKER"
+    },
+    "4": {
+      "hostname": "worker4",
+      "inet_addr": "192.168.1.14",
+      "latest_recv": "22:24:45 04-08-2020",
+      "ports": [
+        {
+          "daemon": "workerd",
+          "port": 10300
+        },
+        {
+          "daemon": "builderd",
+          "port": 5000
+        }
+      ],
+      "type": "WORKER"
+    }
+  }
+}

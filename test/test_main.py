@@ -9,7 +9,7 @@ from uuid import uuid4
 import jsonpickle
 
 
-def test_routine_checking_heartbeat(db_manager: 'TinyDbWrapper', interval: int):
+def test_routine_checking_heartbeat(db_manager: 'HostTinyDbWrapper', interval: int):
     try:
         all_hostnames = db_manager.get_all_hostnames_by_type(HostType.WORKER)
         disconnected_hosts = []
@@ -23,7 +23,7 @@ def test_routine_checking_heartbeat(db_manager: 'TinyDbWrapper', interval: int):
         print(err)
 
 
-def test_check_heartbeat(db_manager: 'TinyDbWrapper', hostname: str, interval: int):
+def test_check_heartbeat(db_manager: 'HostTinyDbWrapper', hostname: str, interval: int):
     try:
         result = db_manager.check_heartbeat(hostname, datetime.now(), interval)
 
@@ -35,7 +35,7 @@ def test_check_heartbeat(db_manager: 'TinyDbWrapper', hostname: str, interval: i
         print(err)
 
 
-def test_update_heartbeat(db_manager: 'TinyDbWrapper', hostname: str):
+def test_update_heartbeat(db_manager: 'HostTinyDbWrapper', hostname: str):
     try:
         db_manager.update_host_heartbeat(hostname)
         host = db_manager.get_host_by_hostname(hostname)
@@ -44,7 +44,7 @@ def test_update_heartbeat(db_manager: 'TinyDbWrapper', hostname: str):
         print(err)
 
 
-def test_get_host(db_manager: 'TinyDbWrapper', hostname: str):
+def test_get_host(db_manager: 'HostTinyDbWrapper', hostname: str):
     try:
         host = db_manager.get_host_by_hostname(hostname)
         print(host)
@@ -52,7 +52,7 @@ def test_get_host(db_manager: 'TinyDbWrapper', hostname: str):
         print(err)
 
 
-def test_insert_hosts(db_manager: 'TinyDbWrapper', hostname: str, inet_addr: str,
+def test_insert_hosts(db_manager: 'HostTinyDbWrapper', hostname: str, inet_addr: str,
                       ports: ['vrmjobs.PortInfo'], hosttype: 'vrmjobs.HostType'):
     try:
         host = HostInfo(hostname, inet_addr, ports, hosttype)
@@ -64,7 +64,7 @@ def test_insert_hosts(db_manager: 'TinyDbWrapper', hostname: str, inet_addr: str
         print(err)
 
 
-def test_insert_queryinfo(db_manager: 'TinyDbWrapper'):
+def test_insert_queryinfo(db_manager: 'QueryCriteriaTinyDbWrapper'):
     node_cpu_filter_info = FilterInfo('cpu', [{'field_name': 'mode', 'field_value': 'idle', 'regex': '='}])
     node_disk_filter_info = FilterInfo('disk', [{'field_name': 'mountpoint', 'field_value': '/', 'regex': '='}])
     node_disk_io_filter_info = FilterInfo('disk_io',
@@ -98,22 +98,22 @@ def test_insert_queryinfo(db_manager: 'TinyDbWrapper'):
 
 def main():
     # create db
-    #db = TinyDbWrapper('test_db.json')
-    #test_insert_queryinfo(db)
-    main_path = str(pathlib.Path(__file__).parent.absolute())
-    with open(os.path.join(main_path, 'config.yaml'), 'r') as f:
-        try:
-            cfg = yaml.safe_load(f)
-        except yaml.YAMLError as exc:
-            print(exc)
+    db = QueryCriteriaTinyDbWrapper('criteria_db.json')
+    test_insert_queryinfo(db)
+    #main_path = str(pathlib.Path(__file__).parent.absolute())
+    #with open(os.path.join(main_path, 'config.yaml'), 'r') as f:
+    #    try:
+    #        cfg = yaml.safe_load(f)
+    #    except yaml.YAMLError as exc:
+    #        print(exc)
 
     # debug
     # print(cfg)
 
-    container_configs = container_convert_yaml_to_json(cfg['architectd']['metric_exporters']['production']['containers'],
-                                                       '3.8')
+    #container_configs = container_convert_yaml_to_json(cfg['architectd']['metric_exporters']['production']['containers'],
+    #                                                   '3.8')
 
-    print(container_configs)
+    #print(container_configs)
 
 
 if __name__ == '__main__':

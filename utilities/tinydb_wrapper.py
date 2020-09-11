@@ -7,9 +7,9 @@ from .tinydb_exceptions import *
 import vrmjobs
 
 
-class TinyDbWrapper(metaclass=SingletonMeta):
+class HostTinyDbWrapper(metaclass=SingletonMeta):
     """
-    Wrapper class for TinyDB within VRM system
+    Wrapper class for TinyDB within VRM system to manage host information
     """
 
     def __init__(self, db_path: str) -> None:
@@ -17,8 +17,6 @@ class TinyDbWrapper(metaclass=SingletonMeta):
         self.db = TinyDB(db_path, sort_keys=True, indent=2, separators=(',', ': '))
         # create hosts table
         self.hosts = self.db.table('hosts')
-        # create query table
-        self.query_info = self.db.table('query_info')
         # create lock
         self.lock = RLock()
         # create timing-format
@@ -185,6 +183,22 @@ class TinyDbWrapper(metaclass=SingletonMeta):
             except Exception as err:
                 raise HeartbeatError('Cannot check heartbeat of host with hostname={}'.format(hostname), err)
 
+
+class QueryCriteriaTinyDbWrapper(metaclass=SingletonMeta):
+    """
+    Wrapper class for TinyDB within VRM system to manage criteria information of multiple queries
+    """
+
+    def __init__(self, db_path: str) -> None:
+        # create db
+        self.db = TinyDB(db_path, sort_keys=True, indent=2, separators=(',', ': '))
+        # create query table
+        self.criteria_info = self.db.table('criteria_info')
+        # create lock
+        self.lock = RLock()
+        # create timing-format
+        self.time_format = '%H:%M:%S %d-%m-%Y'
+
     def insert_queryinfo(self, sys_type: str, job: str, info: List['vrmjobs.FilterInfo']) -> bool:
         """
         Insert a FilterInfo to db
@@ -203,14 +217,14 @@ class TinyDbWrapper(metaclass=SingletonMeta):
                     for item in info:
                         filters.append({'category': item.category, 'criteria': item.criteria})
 
-                    self.query_info.insert({'type': sys_type,
-                                            'job': job,
-                                            'filters': filters})
+                    self.criteria_info.insert({'type': sys_type,
+                                               'job': job,
+                                               'filters': filters})
                     return True
                 # in case host_query_info, we add/update the category if needed
                 else:
                     query = Query()
-                    record = self.query_info.search(query.type == sys_type and query.job == job)
+                    record = self.criteria_info.search(query.type == sys_type and query.job == job)
                     old_filters = record[0]['filters']
                     for item_info in info:
                         # if category of new FilterInfo (item_info) is already included in the database
@@ -220,18 +234,20 @@ class TinyDbWrapper(metaclass=SingletonMeta):
                                     # now we compare each criterion of item_info and item_filter
                                     for crit_info in item_info.criteria:
                                         # add with comparing field_name (unique check)
-                                        if crit_info['field_name'] not in [d['field_name'] for d in item_filter['criteria']]:
+                                        if crit_info['field_name'] not in [d['field_name'] for d in
+                                                                           item_filter['criteria']]:
                                             item_filter['criteria'].append(crit_info)
                                         else:
-                                            if crit_info['field_value'] not in [d['field_value'] for d in item_filter['criteria']]:
+                                            if crit_info['field_value'] not in [d['field_value'] for d in
+                                                                                item_filter['criteria']]:
                                                 item_filter['criteria'].append(crit_info)
 
                         # else, we add the whole new category and all of its criteria
                         else:
                             old_filters.append({'category': item_info.category, 'criteria': item_info.criteria})
 
-                    self.query_info.update({'filters': old_filters},
-                                           query.type.matches(sys_type) and query.job.matches(job))
+                    self.criteria_info.update({'filters': old_filters},
+                                              query.type.matches(sys_type) and query.job.matches(job))
                     return True
 
             except Exception as err:
@@ -245,7 +261,7 @@ class TinyDbWrapper(metaclass=SingletonMeta):
         :return: True if included, False otherwise
         """
         with self.lock:
-            infos = self.query_info.all()
+            infos = self.criteria_info.all()
             for info in infos:
                 if info['type'] == sys_type and info['job'] == job:
                     return True
@@ -260,7 +276,7 @@ class TinyDbWrapper(metaclass=SingletonMeta):
         :return: List of vrmjobs.FilterInfo's criteria
         """
         with self.lock:
-            query_infos = self.query_info.all()
+            query_infos = self.criteria_info.all()
             for info in query_infos:
                 if info['type'] == sys_type and info['job'] == job:
                     for item in info['filters']:
@@ -277,11 +293,10 @@ class TinyDbWrapper(metaclass=SingletonMeta):
         """
         with self.lock:
             categories = []
-            query_infos = self.query_info.all()
+            query_infos = self.criteria_info.all()
             for info in query_infos:
                 if info['type'] == sys_type and info['job'] == job:
                     for item in info['filters']:
                         categories.append(item['category'])
 
             return categories
-
