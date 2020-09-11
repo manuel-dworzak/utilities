@@ -7,3 +7,4 @@
 #### Versions:
 - `1.x.x`: used with vrmjobs-ver2
 - `2.x.x`: used with vrmjobs-ver3
+- `3.x.x`: used with vrmjobs-ver3 for combined collector-monitor system.
