@@ -47,7 +47,7 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
             self.lock.release()
             return is_inserted
 
-    def _check_host_existence(self, hostname: str) -> bool:
+    def check_host_existence(self, hostname: str) -> bool:
         """
         Check whether a host with certain hostname is already included in the hosts table
         :param hostname: hostname of the host need to check
