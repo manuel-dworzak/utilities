@@ -30,19 +30,17 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
         """
         self.lock.acquire()
         try:
-            host = self._check_host_existence(info.hostname)
             is_inserted = False
-            if not host:
-                ports = []
-                for p in info.ports:
-                    ports.append({"daemon": p.daemon, "port": p.port})
+            ports = []
+            for p in info.ports:
+                ports.append({"daemon": p.daemon, "port": p.port})
 
-                self.hosts.insert({"hostname": info.hostname,
-                                   "inet_addr": info.inet_addr,
-                                   "ports": ports,
-                                   "type": info.type.name,
-                                   "latest_recv": datetime.now().strftime(self.time_format)})
-                is_inserted = True
+            self.hosts.insert({"hostname": info.hostname,
+                               "inet_addr": info.inet_addr,
+                               "ports": ports,
+                               "type": info.type.name,
+                               "latest_recv": datetime.now().strftime(self.time_format)})
+            is_inserted = True
         except Exception as err:
             raise InsertError('Cannot insert new host {}'.format(str(info)), err)
         finally:
