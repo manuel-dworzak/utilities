@@ -7,7 +7,7 @@ from datetime import datetime
 import yaml
 from uuid import uuid4
 import jsonpickle
-
+import multiprocessing
 
 def test_routine_checking_heartbeat(db_manager: 'HostTinyDbWrapper', interval: int):
     try:
@@ -97,8 +97,9 @@ def test_insert_queryinfo(db_manager: 'QueryCriteriaTinyDbWrapper'):
 
 
 def main():
+    access_lock = multiprocessing.Lock()
     # create db
-    db = QueryCriteriaTinyDbWrapper('criteria_db.json')
+    db = QueryCriteriaTinyDbWrapper('criteria_db.json', access_lock)
     test_insert_queryinfo(db)
     #main_path = str(pathlib.Path(__file__).parent.absolute())
     #with open(os.path.join(main_path, 'config.yaml'), 'r') as f:
