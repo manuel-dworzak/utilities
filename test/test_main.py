@@ -2,12 +2,13 @@ import os
 import pathlib
 
 from utilities import *
-from vrmjobs import *
+from dtos import *
 from datetime import datetime
 import yaml
 from uuid import uuid4
 import jsonpickle
 import multiprocessing
+
 
 def test_routine_checking_heartbeat(db_manager: 'HostTinyDbWrapper', interval: int):
     try:
@@ -53,7 +54,7 @@ def test_get_host(db_manager: 'HostTinyDbWrapper', hostname: str):
 
 
 def test_insert_hosts(db_manager: 'HostTinyDbWrapper', hostname: str, inet_addr: str,
-                      ports: ['vrmjobs.PortInfo'], hosttype: 'vrmjobs.HostType'):
+                      ports: ['PortInfo'], hosttype: 'HostType'):
     try:
         host = HostInfo(hostname, inet_addr, ports, hosttype)
         result = db_manager.insert_host(host)

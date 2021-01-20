@@ -3,13 +3,13 @@ from typing import List, Dict
 from datetime import datetime
 from .singleton import SingletonMeta
 from .tinydb_exceptions import *
-import vrmjobs
+import dtos
 from multiprocessing import Lock
 
 
 class HostTinyDbWrapper(metaclass=SingletonMeta):
     """
-    Wrapper class for TinyDB within VRM system to manage host information
+    Wrapper class for TinyDB within CRM system to manage host information
     """
 
     def __init__(self, db_path: str, access_lock: Lock) -> None:
@@ -22,7 +22,7 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
         # create timing-format
         self.time_format = '%H:%M:%S %d-%m-%Y'
 
-    def insert_host(self, info: 'vrmjobs.HostInfo') -> bool:
+    def insert_host(self, info: 'dtos.HostInfo') -> bool:
         """
         Insert a new host into db
         :param info: an instance of HostInfo
@@ -62,7 +62,7 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
         self.lock.release()
         return is_found
 
-    def get_all_hostnames_by_type(self, host_type: 'vrmjobs.HostType') -> []:
+    def get_all_hostnames_by_type(self, host_type: 'dtos.HostType') -> []:
         """
         Get all hostnames of a certain type
         :param host_type: type of host we want to filter
@@ -75,18 +75,18 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
 
             if hosts:
                 for h in hosts:
-                    if vrmjobs.HostType.__dict__[h['type']] == host_type:
+                    if dtos.HostType.__dict__[h['type']] == host_type:
                         hostnames.append(h['hostname'])
         except Exception as err:
-            raise GetError('Cannot find hostnames with type={}'.format(str(host_type)), err)
+            raise GetError('Cannot find hostname with type={}'.format(str(host_type)), err)
         finally:
             self.lock.release()
             return hostnames
 
-    def get_host_by_hostname(self, hostname: str) -> vrmjobs.HostInfo:
+    def get_host_by_hostname(self, hostname: str) -> dtos.HostInfo:
         """
         Get info of a host by its hostname
-        :param hostname: hostname of a worker/controller/monitor
+        :param hostname: hostname of a worker/controller
         :return: HostInfo instance
         """
         self.lock.acquire()
@@ -97,13 +97,13 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
             if record:
                 port_infos = []
                 for info in record[0]["ports"]:
-                    port_infos.append(vrmjobs.PortInfo(info["daemon"], info["port"]))
+                    port_infos.append(dtos.PortInfo(info["daemon"], info["port"]))
 
-                host_info = vrmjobs.HostInfo(record[0]["hostname"],
+                host_info = dtos.HostInfo(record[0]["hostname"],
                                              record[0]["inet_addr"],
                                              port_infos,
                                              # https://stackoverflow.com/questions/41407414/convert-string-to-enum-in-python
-                                             vrmjobs.HostType.__dict__[record[0]["type"]])
+                                             dtos.HostType.__dict__[record[0]["type"]])
             else:
                 raise Exception('Not found.')
         except Exception as err:
@@ -112,9 +112,9 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
             self.lock.release()
             return host_info
 
-    def get_daemon_by_name(self, hostname: str, daemon: str) -> vrmjobs.PortInfo:
+    def get_daemon_by_name(self, hostname: str, daemon: str) -> dtos.PortInfo:
         """
-        Get daemon information of a worker/collector/monitor by its hostname
+        Get daemon information of a worker/collector by its hostname
         :param hostname: hostname of a host
         :param daemon: name of daemon
         :return: an instance of PortInfo
@@ -127,7 +127,7 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
             if record:
                 for info in record["ports"]:
                     if info["daemon"] == daemon:
-                        port_info = vrmjobs.PortInfo(info["daemon"], info["port"])
+                        port_info = dtos.PortInfo(info["daemon"], info["port"])
 
         except Exception as err:
             raise GetError('Cannot get daemon name={} of host with hostname={}'.format(daemon, hostname), err)
@@ -200,7 +200,7 @@ class HostTinyDbWrapper(metaclass=SingletonMeta):
 
 class QueryCriteriaTinyDbWrapper(metaclass=SingletonMeta):
     """
-    Wrapper class for TinyDB within VRM system to manage criteria information of multiple queries
+    Wrapper class for TinyDB within CRM system to manage criteria of resource usage queries
     """
 
     def __init__(self, db_path: str, access_lock: Lock) -> None:
@@ -213,7 +213,7 @@ class QueryCriteriaTinyDbWrapper(metaclass=SingletonMeta):
         # create timing-format
         self.time_format = '%H:%M:%S %d-%m-%Y'
 
-    def insert_queryinfo(self, sys_type: str, job: str, info: List['vrmjobs.FilterInfo']) -> bool:
+    def insert_queryinfo(self, sys_type: str, job: str, info: List['dtos.FilterInfo']) -> bool:
         """
         Insert a FilterInfo to db
         :param sys_type: type of the system (simulation/production)
@@ -289,7 +289,7 @@ class QueryCriteriaTinyDbWrapper(metaclass=SingletonMeta):
         :param sys_type: type of system (simulation/production)
         :param job: name of a prometheus job
         :param category: cpu/memory/disk/disk_io/network_io
-        :return: List of vrmjobs.FilterInfo's criteria
+        :return: List of FilterInfo's criteria
         """
         self.lock.acquire()
         query_infos = self.criteria_info.all()

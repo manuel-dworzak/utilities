@@ -14,10 +14,10 @@ URL = 'https://github.com/thanhledev/utilities'
 EMAIL = 'thanhledev@gmail.com'
 AUTHOR = 'Thanh Le'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '3.0.3'
+VERSION = '3.0.4'
 
 # What packages are required for this module to be executed?
-REQUIRED = ['tl-vrmjobs>=3.0.0', 'tinydb']
+REQUIRED = ['tl-crmdtos>=1.0.0', 'tinydb']
 
 # What packages are optional?
 EXTRAS = {}
